@@ -1,11 +1,66 @@
 [
   {
-    "name": "example",
-    "title": "TODO(author): the first document this industry must produce",
-    "for_each": "select gen_random_uuid() as id, 'Example' as name",
-    "file": "name",
+    "name": "event-report",
+    "title": "Drinking water event report",
+    "for_each": "select id, code from events order by code",
+    "file": "code",
     "sections": [
-      { "title": "Details", "sql": "select 'replace me' as item, $1::text as record_id" }
+      {
+        "title": "The event",
+        "layout": "record",
+        "sql": "select e.code, su.name as supply, su.registration_ref as registration, su.regulator, p.name as point, replace(e.kind, '_', ' ') as kind, e.parameter, e.detected_on, e.description, e.status from events e join supplies su on su.id = e.supply_id left join points p on p.id = e.point_id where e.id = $1"
+      },
+      {
+        "title": "What triggered it",
+        "sql": "select c.sample, c.sampled_on, c.lab, c.point, c.parameter, case when c.qualifier = '=' then '' else c.qualifier end || c.value as result, c.unit, c.verdict from events e join result_check c on c.result_id = e.result_id where e.id = $1"
+      },
+      {
+        "title": "Notification and notice",
+        "layout": "record",
+        "sql": "select notified_on as regulator_told_on, notified_by as told_by, regulator_ref as reference, replace(notice, '_', ' ') as notice_to_consumers, notice_on as notice_issued, notice_lifted_on as notice_lifted from events where id = $1"
+      },
+      {
+        "title": "Resample",
+        "sql": "select c.sample, c.sampled_on, c.parameter, case when c.qualifier = '=' then '' else c.qualifier end || c.value as result, c.unit, c.verdict from events e join samples s on s.id = e.resample_id join result_check c on c.sample = s.code where e.id = $1 order by c.parameter"
+      },
+      {
+        "title": "Corrective action and close-out",
+        "layout": "record",
+        "sql": "select corrective_action, closed_on, closeout_note from events where id = $1"
+      },
+      {
+        "title": "Record of every step",
+        "sql": "select a.created_at as recorded_at, a.actor as by, a.command as step, a.detail from activity a join events e on e.code = a.record_id where e.id = $1 order by a.id"
+      }
+    ]
+  },
+  {
+    "name": "monthly-summary",
+    "title": "Monthly drinking water summary",
+    "for_each": "select id, code from supplies where active order by code",
+    "file": "code",
+    "sections": [
+      {
+        "title": "Supply",
+        "layout": "record",
+        "sql": "select name as supply, operator, registration_ref as registration, regulator, population as people_served, plan_reviewed_on as safety_plan_reviewed from supplies where id = $1"
+      },
+      {
+        "title": "Results in the last 30 days",
+        "sql": "select c.parameter, count(*)::int as results, count(*) filter (where c.verdict = 'ok')::int as within_limits, count(*) filter (where c.verdict in ('over health limit','under health minimum'))::int as health, count(*) filter (where c.verdict like '%operational%')::int as operational, count(*) filter (where c.verdict = 'over aesthetic value')::int as aesthetic from result_check c join supplies su on su.code = c.supply where su.id = $1 and c.sampled_on >= current_date - 30 group by c.parameter order by c.parameter"
+      },
+      {
+        "title": "Events",
+        "sql": "select e.code as event, replace(e.kind, '_', ' ') as kind, e.parameter, e.detected_on, e.notified_on, replace(e.notice, '_', ' ') as notice, e.status from events e where e.supply_id = $1 and (e.status = 'open' or e.detected_on >= current_date - 30) order by e.detected_on"
+      },
+      {
+        "title": "Sampling overdue",
+        "sql": "select d.point, d.parameter, d.every_days, d.last_sampled, d.days_overdue from sampling_due d join supplies su on su.code = d.supply where su.id = $1 and d.days_overdue > 0 order by d.days_overdue desc"
+      },
+      {
+        "title": "Safety plan actions open",
+        "sql": "select code, hazard, action, owner, due from plan_actions where supply_id = $1 and done_on is null order by due"
+      }
     ]
   }
 ]

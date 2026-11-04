@@ -2,12 +2,54 @@
   {
     "name": "week",
     "title": "This week",
-    "subtitle": "Water Compliance for Claude Code: what needs attention, rendered by npm run view",
+    "subtitle": "What needs a person across every supply, worst first. Rendered by npm run view.",
     "sections": [
       {
-        "title": "Needs attention",
-        "note": "TODO(author): point this at the industry's attention view (overdue, stuck, quiet).",
-        "sql": "select 'replace me' as item, 'TODO(author)' as why"
+        "title": "Public health and legal duties",
+        "note": "Detections nobody owns, events the regulator has not heard about, notices in force and late resamples.",
+        "sql": "select supply, item, rule, detail, days from supply_attention where severity = 1 order by days desc nulls last, supply"
+      },
+      {
+        "title": "Overdue work",
+        "sql": "select supply, item, rule, detail, days from supply_attention where severity = 2 order by days desc nulls last, supply"
+      },
+      {
+        "title": "Housekeeping",
+        "sql": "select supply, item, rule, detail, days from supply_attention where severity = 3 order by days desc nulls last, supply"
+      }
+    ]
+  },
+  {
+    "name": "sampling-run",
+    "title": "Sampling run",
+    "subtitle": "Every test overdue or due in the next 7 days, by supply and point. Print it for the run.",
+    "sections": [
+      {
+        "title": "Due by next week",
+        "sql": "select supply, point, point_name as where_to_sample, parameter as test, next_due as due, days_overdue from sampling_due where next_due <= current_date + 7 order by supply, point, parameter"
+      },
+      {
+        "title": "Still at the lab",
+        "sql": "select su.code as supply, s.code as sample, p.name as point, s.sampled_on, s.lab, current_date - s.sampled_on as days_waiting from samples s join points p on p.id = s.point_id join supplies su on su.id = p.supply_id where s.status = 'at_lab' order by s.sampled_on"
+      }
+    ]
+  },
+  {
+    "name": "events",
+    "title": "Events and notices",
+    "subtitle": "Open events, notices in force, and what each still needs before it can close.",
+    "sections": [
+      {
+        "title": "Notices in force",
+        "sql": "select code as event, supply_name as supply, replace(notice, '_', ' ') as notice, notice_on as since, current_date - notice_on as days, coalesce(resample, 'none yet') as resample from event_register where notice_in_force order by notice_on"
+      },
+      {
+        "title": "Open events",
+        "sql": "select code as event, supply, replace(kind, '_', ' ') as kind, parameter, detected_on, coalesce(notified_on::text, 'NOT TOLD') as regulator_told, coalesce(resample, 'none') as resample, days_open from event_register where status = 'open' order by detected_on"
+      },
+      {
+        "title": "Closed in the last 90 days",
+        "sql": "select code as event, supply, replace(kind, '_', ' ') as kind, detected_on, days_to_notify, closed_on, days_open from event_register where status = 'closed' and closed_on >= current_date - 90 order by closed_on desc"
       }
     ]
   }

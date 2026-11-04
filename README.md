@@ -38,13 +38,48 @@
 
 ## What is this
 
-Water Compliance for Claude Code does the job you pay WaterOutlook for, as a Postgres database and a set of agent commands. There is no web front end. You open the folder in [Claude Code](https://claude.com/claude-code) (or Codex, OpenCode, Cursor: see `AGENTS.md`) and ask for what you want in plain language. It runs the right query, and it can answer questions the WaterOutlook dashboard cannot.
+Water Compliance for Claude Code does the compliance job you pay WaterOutlook for, as a Postgres database and a set of agent commands. There is no web front end. You open the folder in [Claude Code](https://claude.com/claude-code) (or Codex, OpenCode, Cursor: see `AGENTS.md`) and ask for what you want in plain language. It runs the right query, and it can answer questions the WaterOutlook dashboard cannot.
 
-<!-- TODO(author): the annual bill. One sentence: what a 10 to 50 person business typically pays WaterOutlook per year, all in, with a source. -->
+WaterOutlook does not publish a price. It sells an enterprise cloud platform for operational and compliance data, quoted per client, and says it collects data from more than 13,000 plants and over 3,700 users ([wateroutlook.com/about-us](https://www.wateroutlook.com/about-us), checked 2026-11-04). A small supplier that only needs to prove its water is safe ends up renting a platform built for SCADA feeds and carbon accounting.
 
 Want the same thing with a web front end, or built on a different stack? That is a customisation, and it is exactly what Enterprise DNA does: [book a call](https://enterprisedna.co/omni/book/?utm_source=github&utm_medium=readme&utm_campaign=wateroutlook).
 
-<!-- TODO(author): two or three sentences on what this specific product covers and who it is for. -->
+It is drinking water compliance for anyone who supplies water to other people: council water services and the new water organisations, rural water schemes, campgrounds and holiday parks, schools, marae, retirement villages and industrial sites with their own bore. It holds every supply, sampling point, sampling schedule, sample and lab result, checks each result against the New Zealand standards or the Australian Drinking Water Guidelines, and opens an event the moment a result breaches a health limit. Each event then tracks the duties that follow: tell the regulator, resample, issue and lift a boil water notice, fix the cause and close it out. The safety plan's improvement actions, consumer complaints and daily treatment readings sit alongside.
+
+### Ten questions WaterOutlook will not answer for you
+
+These run against the demo data today. Ask them in plain words.
+
+1. Which E. coli detections has nobody told the regulator about yet?
+2. Which boil water notices could come off today because a clear resample is already back?
+3. Which health results have no event raised against them?
+4. Which scheduled tests are overdue this week, and at which taps?
+5. How many days, on average, do we take to tell the regulator after a detection, by supply?
+6. Which samples have been at the lab for more than five days?
+7. Which treatment plants ran over their turbidity limit this week, and for how many minutes?
+8. Which safety plan actions are overdue, and who owns them?
+9. Which illness complaints came in near a low chlorine result?
+10. Which supplies have no registration or an overdue safety plan review?
+
+### Your first hour: ten things to ask for
+
+1. "What needs attention this week?" (`/attention`)
+2. "Set up our supply: the Riverview town scheme, 12,400 people, two bores, one treatment plant and four sample taps."
+3. "We test E. coli weekly at every network tap and nitrate quarterly at the bores." (`/customise` writes the schedule)
+4. "Bring across last year's results from WaterOutlook." (`/import`, test run first)
+5. "Print the sampling run for this week." (`/due`, or `npm run view` for the printable page)
+6. "The lab says E. coli 2 at Mill Street on sample S-RVW-Z2-E1." (`/result` opens the event)
+7. "Draft the notification to Taumata Arowai for EV-0003." (`/draft-notification`)
+8. "Can the boil water notice on Tarawera come off?" (`/lift-notice` says what is missing)
+9. "Put our logo and colours on the event reports." (edit `brand.json`, then `npm run docs`)
+10. "Write the Monday water review." (`/weekly-review`)
+
+### Documents and views
+
+- `npm run docs` renders an event report for every event (the trigger, the notification, the notice, the resample and every step) and a monthly summary for every supply, in your brand (`brand.json`), into `docs-out/`.
+- `npm run view` renders the week, the sampling run and the events and notices as read-only HTML pages into `views/`.
+- `/compliance` checks the records against the rules in [docs/compliance.md](docs/compliance.md), each with its source.
+- `/draft-notice`, `/draft-notification` and `/annual-report` write drafts to `drafts/`. Nothing is ever sent or lodged from here.
 
 ## Why no front end
 
@@ -63,7 +98,9 @@ npm install
 npm run demo
 ```
 
-Then open the folder in Claude Code and type a slash command. <!-- TODO(author): name the first command to try. -->
+Then open the folder in Claude Code and type `/attention`. On the demo data it finds an E. coli detection at a town supply that the regulator has not been told about, a campground tap with a positive result and no event, and a rural scheme's boil water notice that could come off because the resample is clear.
+
+Or from the terminal: `npm run water -- attention`.
 
 ### Use it with your own Postgres or Supabase
 
@@ -71,15 +108,47 @@ Copy `.env.example` to `.env`, set `DATABASE_URL`, then `npm run migrate`. Same 
 
 ## The commands
 
-<!-- TODO(author): a table of the slash commands in .claude/commands and what each one does. -->
-
 | Command | What it does |
 |---|---|
-| `/...` | ... |
+| `/attention` | What needs a person this week: detections nobody owns, untold events, notices in force, late resamples, missed sampling. |
+| `/supplies`, `/supply` | Every supply, or everything about one: points, schedule, attention, events. |
+| `/points`, `/schedule`, `/due` | Sampling points, the full schedule, and the run list for the next 7 days. |
+| `/sample` | Record a sample taken in the field. |
+| `/result` | Record a lab result. A health limit breach opens an event in the same step. |
+| `/void` | Void an unusable sample with a reason. Results are never edited. |
+| `/results`, `/exceedances` | Recent results with verdicts, and every result over a limit in the last year. |
+| `/events`, `/event` | Every event, or one event in full. |
+| `/raise-event` | Open an event by hand: treatment failure, contamination, complaints. |
+| `/notify` | Record that the regulator was told, with their reference. |
+| `/notice`, `/notices` | Record a boil water or do not drink notice; list those in force. |
+| `/resample` | Link the follow-up sample to an event. |
+| `/lift-notice` | Lift a notice, refused until a clear resample taken after it is on file. |
+| `/close-event` | Close an event once told, lifted, clear and fixed. |
+| `/plan`, `/add-action`, `/complete-action`, `/review-plan` | The safety plan's improvement actions and its review date. |
+| `/register` | Record a supply's registration with the regulator. |
+| `/complaints`, `/log-complaint`, `/close-complaint` | Consumer complaints, linked to events. |
+| `/treatment` | Days a treatment plant reading went out of limit. |
+| `/lab` | Samples still at the lab and each lab's turnaround. |
+| `/stats` | By supply: samples, E. coli tests, detections, events, days to notify. |
+| `/standards` | The limits in force and where each comes from. |
+| `/compliance` | The records checked against the rules in docs/compliance.md. |
+| `/draft-notice` | The consumer boil water or do not drink notice, drafted from the event. |
+| `/draft-notification` | The notification to the regulator, drafted from the event. |
+| `/annual-report` | A supply's annual summary: results by parameter, events, complaints. |
+| `/weekly-review` | The Monday review, written from attention, open events and the sampling run. |
+| `/import`, `/export` | Bring results and daily readings across from WaterOutlook or a lab; snapshot every table. |
+| `/activity`, `/help` | The append-only log, and every command. |
+| `/customise`, `/new-view` | Change a field, limit or schedule; add a printable page. |
 
 ## Instead of WaterOutlook
 
-<!-- TODO(author): how to bring data across from WaterOutlook; link docs/replace-wateroutlook.md -->
+WaterOutlook data exports and laboratory results files are set up per client, so the importer accepts the common column names (sample point, date sampled, determinand, result, units, lab, lab reference) and refuses anything it cannot map rather than guessing. Daily treatment summaries (minimum, maximum, minutes out of limit) come in the same way. Always run a test first:
+
+```bash
+npm run water -- import wateroutlook --results=imports/results.csv --readings=imports/readings.csv --dry-run --actor="Your Name"
+```
+
+Imported detections are listed for review rather than raised as new events, because the old system may already hold them. The full guide, with what maps and what does not carry over: [docs/replace-wateroutlook.md](docs/replace-wateroutlook.md).
 
 ## Architecture
 

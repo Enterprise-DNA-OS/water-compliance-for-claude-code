@@ -1,0 +1,4 @@
+Sample Point,Date,Parameter,Min,Max,Minutes Out
+RVW-WTP,2026-09-01,Turbidity,0.09,0.31,0
+RVW-WTP,2026-09-02,Turbidity,0.10,1.30,18
+TWS-UV,2026-09-01,Free Available Chlorine,0.70,1.10,0

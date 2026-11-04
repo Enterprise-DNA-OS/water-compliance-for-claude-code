@@ -13,12 +13,12 @@ That layer used to be the whole product, because talking to a database was hard.
 
 ## What you give up
 
-- **A visual board.** Stages are a table you ask about, not cards you drag.
-- **A phone app.** It runs where Claude Code runs.
-- **A vendor help desk.** This is open source. Enterprise DNA supports the installed version for businesses that want someone to call.
+- **Live control system screens.** Real-time trends and alarms stay in your SCADA. This holds the daily summary and the compliance record.
+- **A phone form in the field.** Samplers record what they took by asking Claude Code, or a field form can be built on the same database.
+- **A vendor help desk.** This is open source. Enterprise DNA supports the installed version for water suppliers that want someone to call.
 
 ## Who this fits
 
-Small teams who already use Claude Code, or who would rather learn to ask than learn another interface. If your team needs a screen to look at all day, keep WaterOutlook. If you need the answers more than the screens, this is cheaper, faster and yours.
+Compliance and operations leads at councils, water organisations, rural schemes, campgrounds and industrial sites who already use Claude Code, or who would rather learn to ask than learn another interface. If your team needs a screen to look at all day, keep WaterOutlook. If you need the answers more than the screens, this is cheaper, faster and yours.
 
 Installed and run for you: https://enterprisedna.co/omni/instead-of/wateroutlook
